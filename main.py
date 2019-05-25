@@ -1,7 +1,10 @@
 from data import Data
+from algorithm import Algorithm
 
 
 def main():
-    data = Data()
+    algorithm = Algorithm(Data())
+    algorithm.run()
+
 
 main()
