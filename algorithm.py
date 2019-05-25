@@ -1,3 +1,4 @@
+import sys
 from algorithm_type import AlgorithmType
 
 
@@ -19,6 +20,7 @@ class Algorithm:
         for graph in self.data.graphs:
             print("==============================================================")
             print("Solving problem: \"" + graph.name + "\"")
+            sys.setrecursionlimit(graph.vertices_num + 10)
             colors_num = 3
             solution_found = False
             while not solution_found:
