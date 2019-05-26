@@ -17,25 +17,32 @@ class Algorithm:
         print(algorithm_string)
 
     def run(self):
+        sys.setrecursionlimit(3000)
         for graph in self.data.graphs:
             print("==============================================================")
             print("Solving problem: \"" + graph.name + "\"")
-            sys.setrecursionlimit(graph.vertices_num + 10)
             colors_num = 3
             solution_found = False
             while not solution_found:
                 print("Setting domain to " + str(colors_num) + " colors")
                 graph.set_domain(colors_num)
                 graph.reset_colors()
+                solution_found = graph.color_with_backtracking()
+                if not solution_found:
+                    colors_num = colors_num + 1
+
+            solution_found = False
+            while not solution_found:
+                graph.reset_colors()
                 if self.data.algorithm_type == AlgorithmType.BACKTRACKING:
                     solution_found = graph.color_with_backtracking()
-                # elif self.data.algorithm_type == AlgorithmType.BACK_JUMPING:
-                #     graph.color_with_back_jumping()
+                elif self.data.algorithm_type == AlgorithmType.BACK_JUMPING:
+                    solution_found = graph.color_with_back_jumping()
                 # elif self.data.algorithm_type == AlgorithmType.FORWARD_CHECKING:
                 #     graph.color_with_back_jumping()
                 # else:
                 #     graph.color_with_arc_consistency()
-                colors_num = colors_num + 1
+
             graph.validate_solution()
             graph.print_solution()
 

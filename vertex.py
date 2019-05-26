@@ -4,6 +4,7 @@ class Vertex:
         self.number = number
         self.neighbors = []
         self.color = -1
+        self.set_order = -1
         self.colors_domain = []
 
     def __lt__(self, other):

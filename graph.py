@@ -1,7 +1,9 @@
 import sys
 import utils
+import random
 from edge import Edge
 from vertex import Vertex
+from operator import attrgetter
 
 
 class Graph:
@@ -9,6 +11,7 @@ class Graph:
         self.name = name
         self.edges_num = 0
         self.vertices_num = 0
+        self.setting_number = 0
         self.edges = []
         self.vertices = []
         self.vertices_numbers = []
@@ -102,16 +105,19 @@ class Graph:
             for neighbor in prev_vertex.neighbors:
                 if neighbor.color == -1:
                     return neighbor
+        unassigned_vertices = []
         for vertex in self.vertices:
             if vertex.color == -1:
-                return vertex
+                unassigned_vertices.append(vertex)
+        if unassigned_vertices:
+            return random.choice(unassigned_vertices)
         return None
 
     def color_with_backtracking(self, prev_vertex=None):
         vertex = self.choose_vertex(prev_vertex)
         if vertex is None:
             return True
-        color = utils.choose_color(vertex)
+        color = self.choose_color(vertex)
         if color is None:
             return False
         vertex.color = color
@@ -123,7 +129,25 @@ class Graph:
                 vertex.colors_domain.append(color)
         vertex.colors_domain.sort()
 
+    def color_with_back_jumping(self, prev_vertex=None):
+        vertex = self.choose_vertex(prev_vertex)
+        if vertex is None:
+            return True
+        color = self.choose_color_for_back_jumping(vertex, self.colors_domain)
+        if color is None:
+            return False
+        vertex.color = color
+        print("Giving vertex " + str(vertex.number) + " color " + str(vertex.color))
+        if self.color_with_back_jumping(vertex):
+            return True
+        vertex.color = -1
+        for color in self.colors_domain:
+            if color not in vertex.colors_domain:
+                vertex.colors_domain.append(color)
+        vertex.colors_domain.sort()
+
     def print_solution(self):
+        print("==============================================================")
         for vertex in self.vertices:
             print("Vertex " + str(vertex.number) + " colored " + str(vertex.color))
         print("\n")
@@ -131,3 +155,35 @@ class Graph:
     def reset_colors(self):
         for vertex in self.vertices:
             vertex.color = -1
+            for color in self.colors_domain:
+                if color not in vertex.colors_domain:
+                    vertex.colors_domain.append(color)
+            vertex.colors_domain.sort()
+
+    def choose_color(self, vertex):
+        for neighbor in vertex.neighbors:
+            if neighbor.color != -1 and neighbor.color in vertex.colors_domain:
+                vertex.colors_domain.remove(neighbor.color)
+        if not vertex.colors_domain:
+            return None
+        vertex.set_order = self.setting_number
+        self.setting_number = self.setting_number + 1
+        return vertex.colors_domain[0]
+
+    def choose_color_for_back_jumping(self, vertex, original_colors_domain):
+        for neighbor in vertex.neighbors:
+            if neighbor.color != -1 and neighbor.color in vertex.colors_domain:
+                vertex.colors_domain.remove(neighbor.color)
+        if not vertex.colors_domain:
+            last_set_neighbor = max(vertex.neighbors, key=attrgetter('set_order'))
+            print("Removing from vertex " + str(last_set_neighbor.number) + " color " + str(last_set_neighbor.color))
+            last_set_neighbor.color = -1
+            first_set_neighbor = min(vertex.neighbors, key=attrgetter('set_order'))
+            last_set_neighbor.set_order = first_set_neighbor.set_order - 1
+            for color in original_colors_domain:
+                if color not in last_set_neighbor.colors_domain:
+                    last_set_neighbor.colors_domain.append(color)
+                if color not in vertex.colors_domain:
+                    vertex.colors_domain.append(color)
+            return self.choose_color_for_back_jumping(vertex, original_colors_domain)
+        return vertex.colors_domain[0]
