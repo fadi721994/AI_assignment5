@@ -38,10 +38,10 @@ class Algorithm:
                     solution_found = graph.color_with_backtracking()
                 elif self.data.algorithm_type == AlgorithmType.BACK_JUMPING:
                     solution_found = graph.color_with_back_jumping()
-                # elif self.data.algorithm_type == AlgorithmType.FORWARD_CHECKING:
-                #     graph.color_with_back_jumping()
+                elif self.data.algorithm_type == AlgorithmType.FORWARD_CHECKING:
+                    solution_found = graph.color_with_forward_checking()
                 # else:
-                #     graph.color_with_arc_consistency()
+                #     solution_found = graph.color_with_arc_consistency()
 
             graph.validate_solution()
             graph.print_solution()

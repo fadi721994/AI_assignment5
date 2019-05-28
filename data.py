@@ -15,7 +15,7 @@ class Data:
 
     def parse_cmd(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-AT', default=1,
+        parser.add_argument('-AT', default=2,
                             help='Algorithm type: 0 for backtracking, 1 for backjumping, 2 for forward checking, '
                                  '3 for arc consistency.')
         args = parser.parse_args()

@@ -100,11 +100,14 @@ class Graph:
             for color in self.colors_domain:
                 vertex.colors_domain.append(color)
 
-    def choose_vertex(self, prev_vertex):
-        if prev_vertex is not None:
+    def choose_vertex(self, prev_vertex, neighbors_first=True):
+        if prev_vertex is not None and neighbors_first:
+            unassigned_neighbors = []
             for neighbor in prev_vertex.neighbors:
                 if neighbor.color == -1:
-                    return neighbor
+                    unassigned_neighbors.append(neighbor)
+            if unassigned_neighbors:
+                return random.choice(unassigned_neighbors)
         unassigned_vertices = []
         for vertex in self.vertices:
             if vertex.color == -1:
@@ -114,37 +117,53 @@ class Graph:
         return None
 
     def color_with_backtracking(self, prev_vertex=None):
-        vertex = self.choose_vertex(prev_vertex)
+        vertex = self.choose_vertex(prev_vertex, False)
         if vertex is None:
             return True
-        color = self.choose_color(vertex)
-        if color is None:
-            return False
-        vertex.color = color
-        if self.color_with_backtracking(vertex):
-            return True
-        vertex.color = -1
         for color in self.colors_domain:
-            if color not in vertex.colors_domain:
-                vertex.colors_domain.append(color)
-        vertex.colors_domain.sort()
+            if utils.valid_color_assignment(vertex, color):
+                vertex.color = color
+                if self.color_with_backtracking(vertex):
+                    return True
+                vertex.color = -1
+        return False
 
     def color_with_back_jumping(self, prev_vertex=None):
-        vertex = self.choose_vertex(prev_vertex)
+        vertex = self.choose_vertex(prev_vertex, False)
         if vertex is None:
             return True
-        color = self.choose_color_for_back_jumping(vertex, self.colors_domain)
-        if color is None:
-            return False
-        vertex.color = color
-        print("Giving vertex " + str(vertex.number) + " color " + str(vertex.color))
-        if self.color_with_back_jumping(vertex):
-            return True
-        vertex.color = -1
+        self.set_order_number(vertex)
         for color in self.colors_domain:
-            if color not in vertex.colors_domain:
-                vertex.colors_domain.append(color)
-        vertex.colors_domain.sort()
+            if utils.valid_color_assignment(vertex, color):
+                vertex.color = color
+                print("Setting vertex " + str(vertex.number) + " to " + str(vertex.color))
+                if self.color_with_back_jumping(vertex):
+                    return True
+                print("Un-setting vertex " + str(vertex.number))
+                vertex.color = -1
+        self.unset_order_number(vertex)
+        utils.unset_conflict_set_latest_assignment(vertex)
+        if self.color_with_back_jumping(prev_vertex):
+            return True
+        return False
+
+    def color_with_forward_checking(self, prev_vertex=None):
+        vertex = self.choose_vertex(prev_vertex, False)
+        if vertex is None:
+            return True
+        for color in vertex.colors_domain:
+            if utils.valid_color_assignment(vertex, color):
+                vertex.color = color
+                self.update_neighbors_colors(vertex)
+                if self.color_with_backtracking(vertex):
+                    return True
+                vertex.color = -1
+                self.update_neighbors_colors(vertex)
+        return False
+
+    def update_neighbors_colors(self, vertex):
+        for neighbor in vertex.neighbors:
+            neighbor.reset_domain(self.colors_domain)
 
     def print_solution(self):
         print("==============================================================")
@@ -160,30 +179,10 @@ class Graph:
                     vertex.colors_domain.append(color)
             vertex.colors_domain.sort()
 
-    def choose_color(self, vertex):
-        for neighbor in vertex.neighbors:
-            if neighbor.color != -1 and neighbor.color in vertex.colors_domain:
-                vertex.colors_domain.remove(neighbor.color)
-        if not vertex.colors_domain:
-            return None
+    def set_order_number(self, vertex):
         vertex.set_order = self.setting_number
         self.setting_number = self.setting_number + 1
-        return vertex.colors_domain[0]
 
-    def choose_color_for_back_jumping(self, vertex, original_colors_domain):
-        for neighbor in vertex.neighbors:
-            if neighbor.color != -1 and neighbor.color in vertex.colors_domain:
-                vertex.colors_domain.remove(neighbor.color)
-        if not vertex.colors_domain:
-            last_set_neighbor = max(vertex.neighbors, key=attrgetter('set_order'))
-            print("Removing from vertex " + str(last_set_neighbor.number) + " color " + str(last_set_neighbor.color))
-            last_set_neighbor.color = -1
-            first_set_neighbor = min(vertex.neighbors, key=attrgetter('set_order'))
-            last_set_neighbor.set_order = first_set_neighbor.set_order - 1
-            for color in original_colors_domain:
-                if color not in last_set_neighbor.colors_domain:
-                    last_set_neighbor.colors_domain.append(color)
-                if color not in vertex.colors_domain:
-                    vertex.colors_domain.append(color)
-            return self.choose_color_for_back_jumping(vertex, original_colors_domain)
-        return vertex.colors_domain[0]
+    def unset_order_number(self, vertex):
+        vertex.set_order = -1
+        self.setting_number = self.setting_number - 1
