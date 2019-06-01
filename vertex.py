@@ -17,3 +17,18 @@ class Vertex:
         for neighbor in self.neighbors:
             if neighbor.color != -1 and neighbor.color in self.colors_domain:
                 self.colors_domain.remove(neighbor.color)
+
+    def remove_color_from_neighbors(self):
+        for neighbor in self.neighbors:
+            if self.color in neighbor.colors_domain:
+                neighbor.colors_domain.remove(self.color)
+
+    def update_neighbors_colors(self, color):
+        for neighbor in self.neighbors:
+            add_color = True
+            for neighbor_neighbor in neighbor.neighbors:
+                if color == neighbor_neighbor.color:
+                    add_color = False
+            if add_color:
+                neighbor.colors_domain.append(color)
+                neighbor.colors_domain.sort()

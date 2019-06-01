@@ -1,9 +1,9 @@
 import sys
 import utils
 import random
+import copy
 from edge import Edge
 from vertex import Vertex
-from operator import attrgetter
 
 
 class Graph:
@@ -117,10 +117,10 @@ class Graph:
         return None
 
     def color_with_backtracking(self, prev_vertex=None):
-        vertex = self.choose_vertex(prev_vertex, False)
+        vertex = self.choose_vertex(prev_vertex, True)
         if vertex is None:
             return True
-        for color in self.colors_domain:
+        for color in vertex.colors_domain:
             if utils.valid_color_assignment(vertex, color):
                 vertex.color = color
                 if self.color_with_backtracking(vertex):
@@ -129,17 +129,15 @@ class Graph:
         return False
 
     def color_with_back_jumping(self, prev_vertex=None):
-        vertex = self.choose_vertex(prev_vertex, False)
+        vertex = self.choose_vertex(prev_vertex, True)
         if vertex is None:
             return True
         self.set_order_number(vertex)
         for color in self.colors_domain:
             if utils.valid_color_assignment(vertex, color):
                 vertex.color = color
-                print("Setting vertex " + str(vertex.number) + " to " + str(vertex.color))
                 if self.color_with_back_jumping(vertex):
                     return True
-                print("Un-setting vertex " + str(vertex.number))
                 vertex.color = -1
         self.unset_order_number(vertex)
         utils.unset_conflict_set_latest_assignment(vertex)
@@ -148,22 +146,30 @@ class Graph:
         return False
 
     def color_with_forward_checking(self, prev_vertex=None):
-        vertex = self.choose_vertex(prev_vertex, False)
+        vertex = self.choose_vertex(prev_vertex, True)
         if vertex is None:
             return True
         for color in vertex.colors_domain:
             if utils.valid_color_assignment(vertex, color):
+                # print("Vertex " + str(vertex.number) + " colored " + str(color))
                 vertex.color = color
-                self.update_neighbors_colors(vertex)
-                if self.color_with_backtracking(vertex):
+                vertex.remove_color_from_neighbors()
+                if self.color_with_forward_checking(vertex):
                     return True
+                # print("Vertex " + str(vertex.number) + " uncolored " + str(color))
                 vertex.color = -1
-                self.update_neighbors_colors(vertex)
+                vertex.update_neighbors_colors(color)
         return False
 
-    def update_neighbors_colors(self, vertex):
-        for neighbor in vertex.neighbors:
-            neighbor.reset_domain(self.colors_domain)
+    def ac3_algorithm(self):
+        for edge in self.edges:
+            if edge.remove_inconsistency_values():
+                for neighbor in edge.vertex_1.neighbors:
+                    self.edges.append(Edge(self.name, edge.vertex_1, neighbor))
+
+    def color_with_arc_consistency(self):
+        self.ac3_algorithm()
+        return self.color_with_backtracking(prev_vertex=None)
 
     def print_solution(self):
         print("==============================================================")
@@ -186,3 +192,26 @@ class Graph:
     def unset_order_number(self, vertex):
         vertex.set_order = -1
         self.setting_number = self.setting_number - 1
+
+    def used_colors_number(self):
+        used_colors = []
+        for vertex in self.vertices:
+            if vertex.color not in used_colors:
+                used_colors.append(vertex.color)
+        return len(used_colors)
+
+    def get_largest_neighbors_num(self):
+        neighbors_num = 0
+        for vertex in self.vertices:
+            if neighbors_num < len(vertex.neighbors):
+                neighbors_num = len(vertex.neighbors)
+        return neighbors_num
+
+    def find_colors_num(self):
+        colors_num = self.get_largest_neighbors_num()
+        print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
+        self.set_domain(colors_num)
+        self.color_with_forward_checking()
+        used_colors = self.used_colors_number()
+        print("Used colors number is " + str(used_colors) + "/" + str(colors_num))
+        return used_colors
