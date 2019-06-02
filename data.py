@@ -19,7 +19,7 @@ class Data:
 
     def parse_cmd(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-ST', default=0,
+        parser.add_argument('-ST', default=1,
                             help='Search type: 0 for backward or forward search and 2 for local search.')
         parser.add_argument('-AT', default=3,
                             help='Algorithm type: 0 for backtracking, 1 for back jumping, 2 for forward checking, '

@@ -56,7 +56,7 @@ class Algorithm:
 
     def local_search(self, graph):
         if self.data.local_search == LocalSearch.FEASIBILITY:
-            print("feas")
+            graph.color_with_feasibility()
         elif self.data.local_search == LocalSearch.KEMPE_CHAINS:
             print("KEMPE")
         else:
