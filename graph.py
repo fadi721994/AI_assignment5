@@ -131,8 +131,8 @@ class Graph:
         vertex = self.choose_vertex(prev_vertex, True)
         if vertex is None:
             return True
-        self.states = self.states + 1
         for color in vertex.colors_domain:
+            self.states = self.states + 1
             if utils.valid_color_assignment(vertex, color):
                 vertex.color = color
                 if self.color_with_backtracking(vertex):
@@ -147,9 +147,9 @@ class Graph:
         vertex = self.choose_vertex(prev_vertex, True)
         if vertex is None:
             return True
-        self.states = self.states + 1
         self.set_order_number(vertex)
         for color in self.colors_domain:
+            self.states = self.states + 1
             if utils.valid_color_assignment(vertex, color):
                 vertex.color = color
                 if self.color_with_back_jumping(vertex):
@@ -166,8 +166,8 @@ class Graph:
         vertex = self.choose_vertex(prev_vertex, True)
         if vertex is None:
             return True
-        self.states = self.states + 1
         for color in vertex.colors_domain:
+            self.states = self.states + 1
             if utils.valid_color_assignment(vertex, color):
                 vertex.color = color
                 vertex.remove_color_from_neighbors()
@@ -230,8 +230,10 @@ class Graph:
         print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
         self.set_domain(colors_num)
         self.color_with_forward_checking()
+        self.states = 0
         used_colors = self.used_colors_number()
         print("Used colors number is " + str(used_colors) + "/" + str(colors_num))
+        self.set_domain(used_colors)
         return used_colors
 
     def color_with_feasibility(self):

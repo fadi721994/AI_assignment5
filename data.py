@@ -21,7 +21,7 @@ class Data:
         parser = argparse.ArgumentParser()
         parser.add_argument('-ST', default=0,
                             help='Search type: 0 for backward or forward search and 2 for local search.')
-        parser.add_argument('-AT', default=1,
+        parser.add_argument('-AT', default=0,
                             help='Algorithm type: 0 for backtracking, 1 for back jumping, 2 for forward checking, '
                                  '3 for arc consistency.')
         parser.add_argument('-LS', default=1,

@@ -36,7 +36,8 @@ class Algorithm:
         sys.setrecursionlimit(5000)
         for graph in self.data.graphs:
             print("==============================================================")
-            print("Solving problem: \"" + graph.name + "\"")
+            print("Solving problem: \"" + graph.name + "\" with " + str(graph.vertices_num) + " vertices and "
+                  + str(graph.edges_num) + " edges.")
             if self.data.search_type == SearchType.BACKWARD_OR_FORWARD_SEARCH:
                 self.backward_or_forward_search(graph)
             else:
@@ -53,8 +54,8 @@ class Algorithm:
         graph.start_time = time.time()
         graph.end_time = time.time() + (3 * 60)
         colors_num = graph.find_colors_num()
-        graph.set_domain(colors_num)
         graph.reset_colors()
+        graph.set_domain(colors_num)
         if self.data.algorithm_type == AlgorithmType.BACKTRACKING:
             graph.color_with_backtracking()
         elif self.data.algorithm_type == AlgorithmType.BACK_JUMPING:
