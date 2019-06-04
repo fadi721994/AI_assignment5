@@ -1,4 +1,6 @@
 import sys
+import os
+import time
 from algorithm_type import AlgorithmType
 from search_type import SearchType
 from local_search import LocalSearch
@@ -27,6 +29,8 @@ class Algorithm:
             else:
                 algorithm_string = algorithm_string + 'hybrid algorithm'
         print(algorithm_string)
+        if os.path.isfile("./output.txt"):
+            os.remove("./output.txt")
 
     def run(self):
         sys.setrecursionlimit(5000)
@@ -38,10 +42,16 @@ class Algorithm:
             else:
                 self.local_search(graph)
             # Need to draw a graph here.
-            graph.validate_solution()
-            graph.print_solution()
+            if graph.time_limit_reached:
+                print("Time limit reached (3 mins), couldn't finish the run")
+                print("\n")
+            else:
+                graph.validate_solution()
+                graph.print_solution()
 
     def backward_or_forward_search(self, graph):
+        graph.start_time = time.time()
+        graph.end_time = time.time() + (3 * 60)
         colors_num = graph.find_colors_num()
         graph.set_domain(colors_num)
         graph.reset_colors()
@@ -53,11 +63,13 @@ class Algorithm:
             graph.color_with_forward_checking()
         else:
             graph.color_with_arc_consistency()
+        print("Time: " + str(round(time.time() - graph.start_time, 6) * 1000))
+        print("States: " + str(graph.states))
 
     def local_search(self, graph):
         if self.data.local_search == LocalSearch.FEASIBILITY:
             graph.color_with_feasibility()
         elif self.data.local_search == LocalSearch.KEMPE_CHAINS:
-            print("KEMPE")
+            graph.color_with_kempe_chains()
         else:
             print("Hybrid")
