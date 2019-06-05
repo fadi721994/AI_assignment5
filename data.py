@@ -18,6 +18,7 @@ class Data:
         self.parse_input_dir('./input/')
         self.max_min = 3
 
+    # Parse the command line
     def parse_cmd(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-ST', default=1,
@@ -59,6 +60,7 @@ class Data:
             sys.exit()
         self.local_search = LocalSearch(local_search)
 
+    # Parse the input directory
     def parse_input_dir(self, directory):
         if not os.path.isdir(directory):
             print("\"inputs\" directory doesn't exist. Please create a directory called \"inputs\" at the same folder "
@@ -72,6 +74,7 @@ class Data:
             print("\"inputs\" directory is empty. Please place a graph description file from "
                   "https://mat.gsia.cmu.edu/COLOR03/ from the \"Graph Coloring Instances\" section in the directory")
 
+    # Parse an input file (a graph)
     def parse_input_file(self, directory, filename):
         with open(directory + filename) as f:
             print("Parsing and creating graph from \"" + filename + "\"")

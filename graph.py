@@ -27,6 +27,7 @@ class Graph:
         self.end_time = 0
         self.time_limit_reached = False
 
+    # Build the graph
     def create_graph(self, file_lines):
         for line in file_lines:
             line = line.strip()
@@ -53,6 +54,7 @@ class Graph:
                 if vertex_1 not in vertex_2.neighbors:
                     vertex_2.neighbors.append(vertex_1)
 
+    # Build a vertex
     def create_vertex(self, number):
         vertex = self.get_vertex(number)
         if vertex is None:
@@ -61,12 +63,14 @@ class Graph:
             self.vertices_numbers.append(number)
         return vertex
 
+    # Given a vertex number, return the vertex
     def get_vertex(self, number):
         for vertex in self.vertices:
             if vertex.number == number:
                 return vertex
         return None
 
+    # If the graph is not a single component, add the remaining vertices
     def create_unconnected_vertices(self):
         if self.vertices_num == len(self.vertices):
             return
@@ -77,12 +81,14 @@ class Graph:
     def __lt__(self, other):
         return self.vertices_num < other.vertices_num
 
+    # Check if all vertices are colored
     def are_all_vertices_colored(self):
         for vertex in self.vertices:
             if vertex.color == -1:
                 return False
         return True
 
+    # Make sure a solution is valid
     def validate_solution(self, print_data=True):
         if not self.are_all_vertices_colored():
             if print_data:
@@ -99,6 +105,7 @@ class Graph:
                               str(neighbour.number) + " have the same color " + str(vertex.color))
                     sys.exit()
 
+    # Set a domain to the given domain
     def set_domain(self, domain):
         self.colors_domain.clear()
         for i in range(domain):
@@ -108,6 +115,7 @@ class Graph:
             for color in self.colors_domain:
                 vertex.colors_domain.append(color)
 
+    # Choose a vertex given a previous vertex. You can choose randomly or prefer the previous vertex neighbors
     def choose_vertex(self, prev_vertex, neighbors_first=True):
         if prev_vertex is not None and neighbors_first:
             unassigned_neighbors = []
@@ -124,6 +132,7 @@ class Graph:
             return random.choice(unassigned_vertices)
         return None
 
+    # Color the graph using backtracking
     def color_with_backtracking(self, prev_vertex=None):
         if time.time() > self.end_time:
             self.time_limit_reached = True
@@ -140,6 +149,7 @@ class Graph:
                 vertex.color = -1
         return False
 
+    # Color the graph using back jumping
     def color_with_back_jumping(self, prev_vertex=None):
         if time.time() > self.end_time:
             self.time_limit_reached = True
@@ -159,6 +169,7 @@ class Graph:
         utils.unset_conflict_set_assignment(vertex)
         return self.color_with_back_jumping(prev_vertex)
 
+    # Color the graph using forward checking
     def color_with_forward_checking(self, prev_vertex=None):
         if time.time() > self.end_time:
             self.time_limit_reached = True
@@ -177,6 +188,7 @@ class Graph:
                 vertex.update_neighbors_colors(color)
         return False
 
+    # Run the AC3 algorithm
     def ac3_algorithm(self, edges=None):
         if edges is None:
             edges = self.edges
@@ -190,6 +202,7 @@ class Graph:
                 for neighbor in edge.vertex_1.neighbors:
                     arc_consistency_edges.append(Edge(edge.name, edge.vertex_1, neighbor))
 
+    # Color the graph using arc consistency
     def color_with_arc_consistency(self, prev_vertex=None):
         if time.time() > self.end_time:
             self.time_limit_reached = True
@@ -207,6 +220,7 @@ class Graph:
                 vertex.color = -1
         return False
 
+    # print a solution
     def print_solution(self):
         with open("output.txt", 'a') as file:
             file.write("+++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -215,6 +229,7 @@ class Graph:
                 file.write("Vertex " + str(vertex.number) + " colored " + str(vertex.color) + '\n')
             print("\n")
 
+    # Reset color domains and remove coloring from vertices
     def reset_colors(self):
         for vertex in self.vertices:
             vertex.color = -1
@@ -223,14 +238,17 @@ class Graph:
                     vertex.colors_domain.append(color)
             vertex.colors_domain.sort()
 
+    # Set vertex coloring order number
     def set_order_number(self, vertex):
         vertex.set_order = self.setting_number
         self.setting_number = self.setting_number + 1
 
+    # Unset vertex coloring order number
     def unset_order_number(self, vertex):
         vertex.set_order = -1
         self.setting_number = self.setting_number - 1
 
+    # Return how many colors are used
     def used_colors_number(self):
         used_colors = []
         for vertex in self.vertices:
@@ -238,6 +256,7 @@ class Graph:
                 used_colors.append(vertex.color)
         return len(used_colors)
 
+    # Return the largest number of neighbors a vertex has in the graph
     def get_largest_neighbors_num(self):
         neighbors_num = 0
         for vertex in self.vertices:
@@ -245,6 +264,7 @@ class Graph:
                 neighbors_num = len(vertex.neighbors)
         return neighbors_num
 
+    # Find the least colors number that can be given by running forward checking
     def find_colors_num(self):
         colors_num = self.get_largest_neighbors_num()
         print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
@@ -256,6 +276,7 @@ class Graph:
         self.set_domain(used_colors)
         return used_colors
 
+    # Color the graph with feasibility
     def color_with_feasibility(self):
         colors_num = self.get_largest_neighbors_num()
         print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
@@ -286,6 +307,7 @@ class Graph:
         for vertex in self.vertices:
             vertex.color = colors_map[vertex.number]
 
+    # Run minimum conflicts local search
     def minimum_conflicts(self):
         curr_iter = 0
         while not self.is_solution_valid() and curr_iter < self.max_iter:
@@ -296,6 +318,7 @@ class Graph:
             vertex.color = color
         return self.is_solution_valid()
 
+    # Get the color that can be given to a vertex which provides the least amount of conflicts
     def get_least_problematic_color(self, vertex):
         minimum_conflicts = math.inf
         best_color = -1
@@ -309,6 +332,7 @@ class Graph:
                 best_color = color
         return best_color
 
+    # Return a single problematic vertex (bad edge)
     def get_problematic_vertex(self):
         problematic_vertices = []
         for vertex in self.vertices:
@@ -317,6 +341,7 @@ class Graph:
                     problematic_vertices.append(vertex)
         return random.choice(problematic_vertices)
 
+    # Check if a solution is valid
     def is_solution_valid(self):
         for vertex in self.vertices:
             if vertex.color == -1:
@@ -326,6 +351,7 @@ class Graph:
                     return False
         return True
 
+    # Compress colors to a consecutive domain (example: [0,4,6] -> [0,1,2])
     def compress_colors(self, validate=True):
         domain = []
         self.colors_domain.sort()
@@ -344,17 +370,20 @@ class Graph:
         if validate:
             self.validate_solution(False)
 
+    # Update all vertices with color X to color Y
     def update_vertex_color(self, from_color, to_color):
         for vertex in self.vertices:
             if vertex.color == from_color:
                 vertex.color = to_color
 
+    # Check if a color is used in the graph
     def is_color_used(self, color):
         for vertex in self.vertices:
             if vertex.color == color:
                 return True
         return False
 
+    # Remove a random color and randomly reassign colors to the vertices that were given the original color
     def replace_color(self):
         color = random.choice(self.colors_domain)
         print("Trying to remove color " + str(color) + " and compressing assignments")
@@ -363,6 +392,7 @@ class Graph:
             if vertex.color == color:
                 vertex.color = random.choice(self.colors_domain)
 
+    # Return the least used color
     def get_least_used_color(self):
         colors_num = {}
         min_color = math.inf
@@ -377,6 +407,7 @@ class Graph:
                 chosen_color = entry
         return chosen_color
 
+    # Color the graph with a greedy algorithm
     def greedy_coloring_algorithm(self, prev_vertex=None):
         vertex = self.choose_vertex(prev_vertex, False)
         if vertex is None:
@@ -391,6 +422,7 @@ class Graph:
                 vertex.color = -1
         return False
 
+    # Color the graph with KEMPE chains
     def color_with_kempe_chains(self):
         colors_num = self.get_largest_neighbors_num()
         print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
@@ -412,6 +444,7 @@ class Graph:
         self.reset_colors()
         return self.color_with_forward_checking(None)
 
+    # Run kempe chains
     def kempe_chains(self):
         color_groups = self.color_groups()
         color = self.get_least_used_color()
@@ -419,6 +452,7 @@ class Graph:
         self.colors_domain.remove(color)
         return self.remove_smallest_group(color_groups)
 
+    # Remove the color that is least used in the graph
     def remove_smallest_group(self, color_groups):
         smallest_group = min(color_groups, key=len)
         color_groups.remove(smallest_group)
@@ -444,6 +478,7 @@ class Graph:
         self.compress_colors()
         return True
 
+    # Get all color groups
     def color_groups(self):
         color_groups = []
         self.compress_colors()
@@ -455,6 +490,7 @@ class Graph:
             color_groups[vertex.color] = group
         return color_groups
 
+    # Remove the smallest group and reassign colors, then if there are any conflicts, run hill climbing to solve them
     def force_remove_smallest_group(self, color_groups):
         smallest_group = min(color_groups, key=len)
         smallest_color = smallest_group[0].color
@@ -479,6 +515,7 @@ class Graph:
                 vertex.color = random.choice(colors)
         return self.hill_climbing(colors)
 
+    # Color the graph with hybrid
     def color_with_hybrid(self):
         colors_num = self.get_largest_neighbors_num()
         print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
@@ -505,6 +542,7 @@ class Graph:
         self.reset_colors()
         return self.color_with_forward_checking(None)
 
+    # Return all conflicted edges
     def get_all_bad_edges(self):
         bad_edges = []
         for vertex in self.vertices:
@@ -513,6 +551,7 @@ class Graph:
                     bad_edges.append(vertex)
         return bad_edges
 
+    # Run hill climbing
     def hill_climbing(self, colors):
         bad_edges = self.get_all_bad_edges()
         if not bad_edges:

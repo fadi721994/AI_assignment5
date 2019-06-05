@@ -10,6 +10,7 @@ class Vertex:
     def __lt__(self, other):
         return self.number < other.number
 
+    # Reset domain of a single vertex
     def reset_domain(self, domain):
         self.colors_domain.clear()
         for i in range(len(domain)):
@@ -18,11 +19,13 @@ class Vertex:
             if neighbor.color != -1 and neighbor.color in self.colors_domain:
                 self.colors_domain.remove(neighbor.color)
 
+    # Remove colors from all vertex neighbors domain
     def remove_color_from_neighbors(self):
         for neighbor in self.neighbors:
             if self.color in neighbor.colors_domain:
                 neighbor.colors_domain.remove(self.color)
 
+    # Add a color to the neighbors domain if it does not exist
     def update_neighbors_colors(self, color):
         for neighbor in self.neighbors:
             add_color = True

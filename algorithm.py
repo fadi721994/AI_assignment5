@@ -32,6 +32,7 @@ class Algorithm:
         if os.path.isfile("./output.txt"):
             os.remove("./output.txt")
 
+    # Main run for the program
     def run(self):
         sys.setrecursionlimit(5000)
         for graph in self.data.graphs:
@@ -57,6 +58,7 @@ class Algorithm:
                 graph.validate_solution()
                 graph.print_solution()
 
+    # Choose the correct backward or forward search algorithm and run it
     def backward_or_forward_search(self, graph):
         colors_num = graph.find_colors_num()
         graph.reset_colors()
@@ -70,6 +72,7 @@ class Algorithm:
         else:
             graph.color_with_arc_consistency()
 
+    # Choose the correct local search algorithm and run it
     def local_search(self, graph):
         if self.data.local_search == LocalSearch.FEASIBILITY:
             graph.color_with_feasibility()

@@ -1,3 +1,4 @@
+# Check if a vertex can be given a color
 def valid_color_assignment(vertex, color):
     for neighbor in vertex.neighbors:
         if neighbor.color != -1 and neighbor.color == color:
@@ -5,6 +6,7 @@ def valid_color_assignment(vertex, color):
     return True
 
 
+# Unset a conflict set assignment
 def unset_conflict_set_assignment(vertex):
     for neighbor in vertex.neighbors:
         neighbor.set_order = -1
@@ -12,6 +14,7 @@ def unset_conflict_set_assignment(vertex):
         # print("Un-setting assignment for vertex " + str(neighbor.number) + " due to vertex " + str(vertex.number))
 
 
+# Swap colors between vertices in a KEMPE chain
 def swap_colors(kempe_chain):
     if not kempe_chain:
         return
