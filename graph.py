@@ -303,6 +303,7 @@ class Graph:
                     file.write("Color cannot be removed, minimum number of colors is "
                                + str(self.used_colors_number() + 1) + '\n')
         used_colors = self.used_colors_number() + 1
+        print("Used colors are " + str(used_colors))
         self.set_domain(used_colors)
         for vertex in self.vertices:
             vertex.color = colors_map[vertex.number]
