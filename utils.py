@@ -9,7 +9,7 @@ def unset_conflict_set_assignment(vertex):
     for neighbor in vertex.neighbors:
         neighbor.set_order = -1
         neighbor.color = -1
-        print("Un-setting assignment for vertex " + str(neighbor.number) + " due to vertex " + str(vertex.number))
+        # print("Un-setting assignment for vertex " + str(neighbor.number) + " due to vertex " + str(vertex.number))
 
 
 def swap_colors(kempe_chain):

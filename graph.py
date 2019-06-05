@@ -177,19 +177,39 @@ class Graph:
                 vertex.update_neighbors_colors(color)
         return False
 
-    def ac3_algorithm(self):
-        for edge in self.edges:
+    def ac3_algorithm(self, edges=None):
+        if edges is None:
+            edges = self.edges
+        arc_consistency_edges = []
+        for edge in edges:
+            arc_consistency_edges.append(Edge(edge.name, edge.vertex_1, edge.vertex_2))
+        while len(arc_consistency_edges) != 0:
+            edge = arc_consistency_edges[0]
+            arc_consistency_edges.remove(edge)
             if edge.remove_inconsistency_values():
                 for neighbor in edge.vertex_1.neighbors:
-                    self.edges.append(Edge(self.name, edge.vertex_1, neighbor))
+                    arc_consistency_edges.append(Edge(edge.name, edge.vertex_1, neighbor))
 
-    def color_with_arc_consistency(self):
-        self.ac3_algorithm()
-        return self.color_with_backtracking(prev_vertex=None)
+    def color_with_arc_consistency(self, prev_vertex=None):
+        if time.time() > self.end_time:
+            self.time_limit_reached = True
+            return True
+        vertex = self.choose_vertex(prev_vertex, True)
+        if vertex is None:
+            return True
+        for color in vertex.colors_domain:
+            self.states = self.states + 1
+            if utils.valid_color_assignment(vertex, color):
+                vertex.color = color
+                self.ac3_algorithm()
+                if self.color_with_arc_consistency(vertex):
+                    return True
+                vertex.color = -1
+        return False
 
     def print_solution(self):
         with open("output.txt", 'a') as file:
-            file.write("==============================================================\n")
+            file.write("+++++++++++++++++++++++++++++++++++++++++++++++++++")
             file.write("Solution for " + self.name + '\n')
             for vertex in self.vertices:
                 file.write("Vertex " + str(vertex.number) + " colored " + str(vertex.color) + '\n')
@@ -245,22 +265,31 @@ class Graph:
         used_colors = self.used_colors_number()
         print("Used colors number is " + str(used_colors) + "/" + str(colors_num))
         success = True
+        colors_map = {}
         while success:
             self.replace_color()
             self.compress_colors(False)
             success = self.minimum_conflicts()
             if success:
-                print("Color removed successfully and graph repainted. Down to " +
-                      str(self.used_colors_number()) + " colors")
+                colors_map.clear()
+                with open("output.txt", 'a') as file:
+                    file.write("Color removed successfully and graph repainted. Down to " +
+                               str(self.used_colors_number()) + " colors\n")
+                for vertex in self.vertices:
+                    colors_map[vertex.number] = vertex.color
             else:
-                print("Color cannot be removed, minimum number of colors is " + str(self.used_colors_number() + 1))
+                with open("output.txt", 'a') as file:
+                    file.write("Color cannot be removed, minimum number of colors is "
+                               + str(self.used_colors_number() + 1) + '\n')
         used_colors = self.used_colors_number() + 1
         self.set_domain(used_colors)
-        self.minimum_conflicts()
+        for vertex in self.vertices:
+            vertex.color = colors_map[vertex.number]
 
     def minimum_conflicts(self):
         curr_iter = 0
         while not self.is_solution_valid() and curr_iter < self.max_iter:
+            self.states = self.states + 1
             curr_iter = curr_iter + 1
             vertex = self.get_problematic_vertex()
             color = self.get_least_problematic_color(vertex)
@@ -327,7 +356,7 @@ class Graph:
         return False
 
     def replace_color(self):
-        color = self.get_least_used_color()
+        color = random.choice(self.colors_domain)
         print("Trying to remove color " + str(color) + " and compressing assignments")
         self.colors_domain.remove(color)
         for vertex in self.vertices:
@@ -355,6 +384,7 @@ class Graph:
         while True:
             color = random.choice(self.colors_domain)
             if utils.valid_color_assignment(vertex, color):
+                self.states = self.states + 1
                 vertex.color = color
                 if self.greedy_coloring_algorithm(vertex):
                     return True
@@ -385,21 +415,38 @@ class Graph:
     def kempe_chains(self):
         color_groups = self.color_groups()
         color = self.get_least_used_color()
-        print("Trying to remove color " + str(color) + " and compressing assignments")
+        # print("Trying to remove color " + str(color) + " and compressing assignments")
         self.colors_domain.remove(color)
-        return self.smallest_to_biggest_groups(color_groups) and self.is_solution_valid()
+        return self.remove_smallest_group(color_groups)
 
-    def smallest_to_biggest_groups(self, color_groups):
+    def remove_smallest_group(self, color_groups):
         smallest_group = min(color_groups, key=len)
-        biggest_group = max(color_groups, key=len)
-        most_used_color = biggest_group[0].color
+        color_groups.remove(smallest_group)
+        color_groups.sort(key=lambda s: len(s))
+        colors = []
+        for group in color_groups:
+            colors.append(group[0].color)
         for vertex in smallest_group:
-            vertex.color = most_used_color
-        self.compress_colors(False)
-        return self.minimum_conflicts()
+            colored = False
+            for color in reversed(colors):
+                can_be_colored = True
+                for neighbor in vertex.neighbors:
+                    self.states = self.states + 1
+                    if neighbor.color == color:
+                        can_be_colored = False
+                        break
+                if can_be_colored:
+                    vertex.color = color
+                    colored = True
+                    break
+            if not colored:
+                return False
+        self.compress_colors()
+        return True
 
     def color_groups(self):
         color_groups = []
+        self.compress_colors()
         for i in self.colors_domain:
             color_groups.append([])
         for vertex in self.vertices:
@@ -407,3 +454,77 @@ class Graph:
             group.append(vertex)
             color_groups[vertex.color] = group
         return color_groups
+
+    def force_remove_smallest_group(self, color_groups):
+        smallest_group = min(color_groups, key=len)
+        smallest_color = smallest_group[0].color
+        color_groups.remove(smallest_group)
+        color_groups.sort(key=lambda s: len(s))
+        colors = []
+        for group in color_groups:
+            colors.append(group[0].color)
+        for vertex in smallest_group:
+            for color in reversed(colors):
+                can_be_colored = True
+                for neighbor in vertex.neighbors:
+                    self.states = self.states + 1
+                    if neighbor.color == color:
+                        can_be_colored = False
+                        break
+                if can_be_colored:
+                    vertex.color = color
+                    break
+        for vertex in smallest_group:
+            if vertex.color == smallest_color:
+                vertex.color = random.choice(colors)
+        return self.hill_climbing(colors)
+
+    def color_with_hybrid(self):
+        colors_num = self.get_largest_neighbors_num()
+        print("Setting domain to " + str(colors_num) + " colors (number of maximum neighbors)")
+        self.set_domain(colors_num)
+        self.greedy_coloring_algorithm()
+        used_colors = self.used_colors_number()
+        print("Used colors number is " + str(used_colors) + "/" + str(colors_num))
+        success = True
+        while success:
+            self.compress_colors()
+            self.set_domain(self.used_colors_number())
+            color_groups = self.color_groups()
+            color = self.get_least_used_color()
+            self.colors_domain.remove(color)
+            success = self.force_remove_smallest_group(color_groups)
+            if success:
+                print("Color removed successfully and graph repainted. Down to " +
+                      str(self.used_colors_number()) + " colors")
+            else:
+                print("Color cannot be removed, minimum number of colors is " + str(self.used_colors_number() + 1))
+        used_colors = self.used_colors_number() + 1
+        print("Used colors are " + str(used_colors))
+        self.set_domain(used_colors)
+        self.reset_colors()
+        return self.color_with_forward_checking(None)
+
+    def get_all_bad_edges(self):
+        bad_edges = []
+        for vertex in self.vertices:
+            for neighbor in vertex.neighbors:
+                if neighbor.color == vertex.color:
+                    bad_edges.append(vertex)
+        return bad_edges
+
+    def hill_climbing(self, colors):
+        bad_edges = self.get_all_bad_edges()
+        if not bad_edges:
+            return True
+        for edge in bad_edges:
+            for color in colors:
+                can_assign_color = True
+                for neighbor in edge.neighbors:
+                    self.states = self.states + 1
+                    if neighbor.color == color:
+                        can_assign_color = False
+                if can_assign_color:
+                    edge.color = color
+                    break
+        return self.is_solution_valid()

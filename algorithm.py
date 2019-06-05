@@ -35,14 +35,21 @@ class Algorithm:
     def run(self):
         sys.setrecursionlimit(5000)
         for graph in self.data.graphs:
+            with open("output.txt", 'a') as file:
+                file.write("==============================================================\n")
+                file.write("Solving problem: \"" + graph.name + "\" with " + str(graph.vertices_num) + " vertices and "
+                           + str(graph.edges_num) + " edges.\n")
             print("==============================================================")
             print("Solving problem: \"" + graph.name + "\" with " + str(graph.vertices_num) + " vertices and "
                   + str(graph.edges_num) + " edges.")
+            graph.start_time = time.time()
+            graph.end_time = time.time() + (self.data.max_min * 60)
             if self.data.search_type == SearchType.BACKWARD_OR_FORWARD_SEARCH:
                 self.backward_or_forward_search(graph)
             else:
                 self.local_search(graph)
-            # Need to draw a graph here.
+            print("Time: " + str(round((time.time() - graph.start_time) * 1000, 5)) + " ms")
+            print("States: " + str(graph.states))
             if graph.time_limit_reached:
                 print("Time limit reached (3 mins), couldn't finish the run")
                 print("\n")
@@ -51,8 +58,6 @@ class Algorithm:
                 graph.print_solution()
 
     def backward_or_forward_search(self, graph):
-        graph.start_time = time.time()
-        graph.end_time = time.time() + (3 * 60)
         colors_num = graph.find_colors_num()
         graph.reset_colors()
         graph.set_domain(colors_num)
@@ -64,8 +69,6 @@ class Algorithm:
             graph.color_with_forward_checking()
         else:
             graph.color_with_arc_consistency()
-        print("Time: " + str(round(time.time() - graph.start_time, 6) * 1000))
-        print("States: " + str(graph.states))
 
     def local_search(self, graph):
         if self.data.local_search == LocalSearch.FEASIBILITY:
@@ -73,4 +76,4 @@ class Algorithm:
         elif self.data.local_search == LocalSearch.KEMPE_CHAINS:
             graph.color_with_kempe_chains()
         else:
-            print("Hybrid")
+            graph.color_with_hybrid()

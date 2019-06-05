@@ -16,23 +16,27 @@ class Edge:
                 return False
         return True
 
+    def can_be_satisfied(self, x, y):
+        for neighbor in self.vertex_1.neighbors:
+            if neighbor.color == x:
+                return False
+        for neighbor in self.vertex_2.neighbors:
+            if neighbor.color == y:
+                return False
+        return True
+
     def x_satisfies_y(self, x):
         can_be_satisfied = False
-        self.vertex_1.color = x
         for y in self.vertex_2.colors_domain:
-            self.vertex_2.color = y
-            if self.is_assignment_valid():
+            if self.can_be_satisfied(x, y):
                 can_be_satisfied = True
                 break
-        if not can_be_satisfied:
-            self.vertex_1.colors_domain.remove(x)
-        self.vertex_1.color = -1
-        self.vertex_2.color = -1
         return can_be_satisfied
 
     def remove_inconsistency_values(self):
         removed = False
         for x in self.vertex_1.colors_domain:
             if not self.x_satisfies_y(x):
+                self.vertex_1.colors_domain.remove(x)
                 removed = True
         return removed

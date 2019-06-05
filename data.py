@@ -16,15 +16,16 @@ class Data:
 
         self.graphs = []
         self.parse_input_dir('./input/')
+        self.max_min = 3
 
     def parse_cmd(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-ST', default=0,
+        parser.add_argument('-ST', default=1,
                             help='Search type: 0 for backward or forward search and 2 for local search.')
         parser.add_argument('-AT', default=0,
                             help='Algorithm type: 0 for backtracking, 1 for back jumping, 2 for forward checking, '
                                  '3 for arc consistency.')
-        parser.add_argument('-LS', default=1,
+        parser.add_argument('-LS', default=2,
                             help='Local search: 0 for feasibility, 1 for KEMPE chains and  2 for hybrid.')
         args = parser.parse_args()
 
